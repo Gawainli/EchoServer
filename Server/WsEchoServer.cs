@@ -75,6 +75,7 @@ public class WsEchoServer
                             if (netPkg.MsgId == 1)
                             {
                                 Console.WriteLine("WebSocket Received Heartbeat Message.");
+                                await SendPingPkg(webSocket);
                                 continue;
                             }
                             if (_echoMessageDecoder.Decode(netPkg.BodyBytes) is not EchoMessage echoMessage) continue;
@@ -108,6 +109,12 @@ public class WsEchoServer
     {
         var echoPkg = EchoPkgHelper.GetEchoPkgBytes(text);
         await webSocket.SendAsync(new ArraySegment<byte>(echoPkg), WebSocketMessageType.Binary, true, _cts.Token);
+    }
+
+    private async Task SendPingPkg(WebSocket webSocket)
+    {
+        var bytes = EchoPkgHelper.GetPingPkgBytes();
+        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, _cts.Token);
     }
 
     private async Task SendEchoMessage(WebSocket webSocket, string text)

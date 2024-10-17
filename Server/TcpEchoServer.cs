@@ -57,15 +57,17 @@ public class TcpEchoServer
                 {
                     break;
                 }
-                
+
                 _pkgDecoder.Buffer.Write(buffer, 0, read);
                 while (_pkgDecoder.Decode() is DefaultNetPackage netPkg)
                 {
                     if (netPkg.MsgId == 1)
                     {
                         Console.WriteLine("Socket Received Heartbeat Message.");
+                        await SendPingPkg(stream);
                         continue;
                     }
+
                     if (_echoMessageDecoder.Decode(netPkg.BodyBytes) is EchoMessage echoMessage)
                     {
                         Console.WriteLine("Socket Received Echo Message: " + echoMessage.text);
@@ -90,6 +92,12 @@ public class TcpEchoServer
     private async Task SendEchoMessagePkg(NetworkStream stream, string text)
     {
         var buffer = EchoPkgHelper.GetEchoPkgBytes(text);
-        await stream.WriteAsync(buffer, 0, buffer.Length, _cts.Token);
+        await stream.WriteAsync(buffer, _cts.Token);
+    }
+
+    private async Task SendPingPkg(NetworkStream stream)
+    {
+        var buffer = EchoPkgHelper.GetPingPkgBytes();
+        await stream.WriteAsync(buffer, _cts.Token);
     }
 }

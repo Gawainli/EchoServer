@@ -8,11 +8,11 @@ public class EchoPkgHelper
         { MsgId = 2, MsgIndex = -1, BodyBytes = new byte[] { } };
 
     private static readonly DefaultNetPackage PingPkg = new()
-        { MsgId = 1, MsgIndex = -1, BodyBytes = new byte[] { } };
+        { MsgId = 1, MsgIndex = -1, BodyBytes = new byte[] { 1 } };
 
     private static readonly EchoMessageEncoder EchoMsgEncoder = new();
     private static readonly DefaultPkgEncoder PkgEncoder = new();
-    private static byte[] PingPkgBytes;
+    private static byte[]? _pingPkgBytes;
 
     public static byte[] GetEchoPkgBytes(string text)
     {
@@ -23,14 +23,11 @@ public class EchoPkgHelper
         return PkgEncoder.Buffer.ReadAllAvailable();
     }
 
-    private static byte[] GetPingPkgBytes()
+    public static byte[] GetPingPkgBytes()
     {
-        if (PingPkgBytes == null)
-        {
-            PkgEncoder.Encode(PingPkg);
-            PingPkgBytes = PkgEncoder.Buffer.ReadAllAvailable();
-        }
-
-        return PingPkgBytes;
+        if (_pingPkgBytes != null) return _pingPkgBytes;
+        PkgEncoder.Encode(PingPkg);
+        _pingPkgBytes = PkgEncoder.Buffer.ReadAllAvailable();
+        return _pingPkgBytes;
     }
 }

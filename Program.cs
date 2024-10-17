@@ -2,9 +2,9 @@
 
 using EchoTCPServerCSharp.Server;
 
-Console.WriteLine("Run Echo TCP Server");
-var tcpEchoServer = new TcpEchoServer();
-tcpEchoServer.Start("127.0.0.1", 8893);
+// Console.WriteLine("Run Echo TCP Server");
+// var tcpEchoServer = new TcpEchoServer();
+// tcpEchoServer.Start("127.0.0.1", 8893);
 // await Task.Run(async () => { await tcpEchoServer.Start("127.0.0.1", 8893); });
 
 Console.WriteLine("Run Echo WebSocket Server");
