@@ -31,7 +31,7 @@ public class WsEchoServer
                     var webSocketContext = await context.AcceptWebSocketAsync(null);
                     var webSocket = webSocketContext.WebSocket;
                     Console.WriteLine("Client connected.");
-                    await Task.Run(() => HandleWebSocketAsync(webSocket));
+                    Task.Run(() => HandleWebSocketAsync(webSocket));
                 }
                 else
                 {

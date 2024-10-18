@@ -24,7 +24,7 @@ public class TcpEchoServer
                 var client = await listener.AcceptTcpClientAsync();
                 Console.WriteLine("Socket Client connected");
                 Console.WriteLine($"Socket Remote endpoint: {client.Client.RemoteEndPoint}");
-                await Task.Run(() => HandleTcpClientAsync(client));
+                Task.Run(() => HandleTcpClientAsync(client));
             }
         }
         catch (Exception e)
