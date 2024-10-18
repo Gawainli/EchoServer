@@ -1,13 +1,33 @@
 ﻿// See https://aka.ms/new-console-template for more information
-
 using EchoTCPServerCSharp.Server;
 
-// Console.WriteLine("Run Echo TCP Server");
-// var tcpEchoServer = new TcpEchoServer();
-// tcpEchoServer.Start("127.0.0.1", 8893);
-// await Task.Run(async () => { await tcpEchoServer.Start("127.0.0.1", 8893); });
+if (args.Length < 2)
+{
+    Console.WriteLine("Usage: EchoTCPServerCSharp <serverType(ws or tcp)> <address> <port>");
+    return;
+}
 
-Console.WriteLine("Run Echo WebSocket Server");
-var wsEchoServer = new WsEchoServer();
-// await Task.Run(async () => { await wsEchoServer.Start("http://localhost:8080/ws/"); });
-await wsEchoServer.Start("http://localhost:8080/ws/");
+var serverType = args[0];
+var address = args[1];
+var port = int.Parse(args[2]);
+
+switch (serverType)
+{
+    case "ws":
+    {
+        Console.WriteLine("Run Echo WebSocket Server");
+        var wsEchoServer = new WsEchoServer();
+        await wsEchoServer.Start($"http://{address}:{port}/ws/");
+        break;
+    }
+    case "tcp":
+    {
+        Console.WriteLine("Run Echo TCP Server");
+        var tcpEchoServer = new TcpEchoServer();
+        await tcpEchoServer.Start(address, port);
+        break;
+    }
+    default:
+        Console.WriteLine("Usage: EchoTCPServerCSharp <serverType(ws or tcp)> <address> <port>");
+        break;
+}
