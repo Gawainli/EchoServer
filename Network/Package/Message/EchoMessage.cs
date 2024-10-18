@@ -5,7 +5,7 @@ namespace MiniGame.Network
     public class EchoMessage : IMessage
     {
         public int MsgId => 2;
-        public string text;
+        public string text = "";
     }
 
     public class EchoMessageEncoder : IClientMessageEncoder

@@ -6,6 +6,6 @@ namespace MiniGame.Network
     {
         ByteRingBuffer Buffer { get; }
         // INetPackage Decode(ByteRingBuffer ringBuffer);
-        INetPackage Decode();
+        INetPackage? Decode();
     }
 }

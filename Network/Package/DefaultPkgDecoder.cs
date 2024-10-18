@@ -6,7 +6,7 @@ namespace MiniGame.Network
     {
         public ByteRingBuffer Buffer { get; } = new ( DefaultNetPackage.PkgMaxSize);
 
-        public INetPackage Decode(ByteRingBuffer ringBuffer)
+        public INetPackage? Decode(ByteRingBuffer ringBuffer)
         {
             if (ringBuffer.Count < DefaultNetPackage.HeaderSize)
             {
@@ -37,7 +37,7 @@ namespace MiniGame.Network
             };
         }
 
-        public INetPackage Decode()
+        public INetPackage? Decode()
         {
             return Decode(Buffer);
         }
