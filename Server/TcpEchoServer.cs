@@ -24,7 +24,7 @@ public class TcpEchoServer
                 var client = await listener.AcceptTcpClientAsync();
                 Console.WriteLine("Socket Client connected");
                 Console.WriteLine($"Socket Remote endpoint: {client.Client.RemoteEndPoint}");
-                await HandleTcpClientAsync(client);
+                await Task.Run(() => HandleTcpClientAsync(client));
             }
         }
         catch (Exception e)
@@ -47,11 +47,6 @@ public class TcpEchoServer
             while (tcpClient.Connected && !_cts.Token.IsCancellationRequested)
             {
                 await Task.Delay(1);
-                // if (!stream.DataAvailable)
-                // {
-                //     continue;
-                // }
-
                 var read = await stream.ReadAsync(buffer, 0, buffer.Length, _cts.Token);
                 if (read == 0)
                 {

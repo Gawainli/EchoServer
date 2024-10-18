@@ -7,7 +7,6 @@ namespace EchoTCPServerCSharp.Server;
 
 public class WsEchoServer
 {
-    private readonly CancellationTokenSource _cts = new();
     private readonly DefaultPkgDecoder _pkgDecoder = new();
     private readonly EchoMessageDecoder _echoMessageDecoder = new();
 
@@ -33,7 +32,8 @@ public class WsEchoServer
                     var webSocket = webSocketContext.WebSocket;
                     Console.WriteLine("Client connected.");
                     // Handle WebSocket communication
-                    await HandleWebSocketAsync(webSocket);
+                    // HandleWebSocketAsync(webSocket);
+                    await Task.Run(() => HandleWebSocketAsync(webSocket));
                 }
                 else
                 {
@@ -44,28 +44,25 @@ public class WsEchoServer
         }
         catch (Exception e)
         {
-            Console.WriteLine("WebSocket server stopped.");
             Console.WriteLine(e);
-        }
-        finally
-        {
-            httpListener.Stop();
         }
     }
 
     private async Task HandleWebSocketAsync(WebSocket webSocket)
     {
         var buffer = new byte[DefaultNetPackage.PkgMaxSize * 4];
+        var handleCts = new CancellationTokenSource();
+        var receivedCout = 0;
         try
         {
             while (webSocket.State == WebSocketState.Open)
             {
                 var result =
-                    await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
+                    await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), handleCts.Token);
                 switch (result.MessageType)
                 {
                     case WebSocketMessageType.Close:
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", _cts.Token);
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", handleCts.Token);
                         Console.WriteLine("WebSocket Connection closed.");
                         break;
                     case WebSocketMessageType.Binary:
@@ -75,51 +72,54 @@ public class WsEchoServer
                             if (netPkg.MsgId == 1)
                             {
                                 Console.WriteLine("WebSocket Received Heartbeat Message.");
-                                await SendPingPkg(webSocket);
+                                await SendPingPkg(webSocket, handleCts.Token);
                                 continue;
                             }
+
                             if (_echoMessageDecoder.Decode(netPkg.BodyBytes) is not EchoMessage echoMessage) continue;
-                            Console.WriteLine("WebSocket Received Echo Message: " + echoMessage.text);
-                            await SendEchoMessagePkg(webSocket, $"WebSocket Server Echo: {echoMessage.text}");
+                            Console.WriteLine($"WebSocket Received Echo Message {receivedCout++}: {echoMessage.text}");
+                            await SendEchoMessagePkg(webSocket, $"WebSocket Server Echo: {echoMessage.text}",
+                                handleCts.Token);
                         }
 
                         break;
                     case WebSocketMessageType.Text:
                         var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                         Console.WriteLine("WebSocket Received Text Message: " + message);
-                        await SendEchoMessage(webSocket, message);
+                        await SendEchoMessage(webSocket, message, handleCts.Token);
                         break;
                 }
             }
         }
         catch (Exception e)
         {
-            _cts.Cancel();
             Console.WriteLine(e);
+            Console.WriteLine("WebSocket Connection closing.");
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", handleCts.Token);
         }
         finally
         {
-            Console.WriteLine($"Connection closed.");
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", _cts.Token);
+            handleCts.Cancel();
             webSocket.Dispose();
+            Console.WriteLine($"WebSocket Connection closed.");
         }
     }
 
-    private async Task SendEchoMessagePkg(WebSocket webSocket, string text)
+    private async Task SendEchoMessagePkg(WebSocket webSocket, string text, CancellationToken token)
     {
         var echoPkg = EchoPkgHelper.GetEchoPkgBytes(text);
-        await webSocket.SendAsync(new ArraySegment<byte>(echoPkg), WebSocketMessageType.Binary, true, _cts.Token);
+        await webSocket.SendAsync(new ArraySegment<byte>(echoPkg), WebSocketMessageType.Binary, true, token);
     }
 
-    private async Task SendPingPkg(WebSocket webSocket)
+    private async Task SendPingPkg(WebSocket webSocket, CancellationToken token)
     {
         var bytes = EchoPkgHelper.GetPingPkgBytes();
-        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, _cts.Token);
+        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Binary, true, token);
     }
 
-    private async Task SendEchoMessage(WebSocket webSocket, string text)
+    private async Task SendEchoMessage(WebSocket webSocket, string text, CancellationToken token)
     {
         var responseBytes = Encoding.UTF8.GetBytes("Server Echo: " + text);
-        await webSocket.SendAsync(new ArraySegment<byte>(responseBytes), WebSocketMessageType.Text, true, _cts.Token);
+        await webSocket.SendAsync(new ArraySegment<byte>(responseBytes), WebSocketMessageType.Text, true, token);
     }
 }
