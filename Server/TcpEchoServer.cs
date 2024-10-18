@@ -42,6 +42,7 @@ public class TcpEchoServer
     {
         var buffer = new byte[DefaultNetPackage.PkgMaxSize * 4];
         var stream = tcpClient.GetStream();
+        var receiveCount = 0;
         try
         {
             while (tcpClient.Connected && !_cts.Token.IsCancellationRequested)
@@ -65,7 +66,7 @@ public class TcpEchoServer
 
                     if (_echoMessageDecoder.Decode(netPkg.BodyBytes) is EchoMessage echoMessage)
                     {
-                        Console.WriteLine("Socket Received Echo Message: " + echoMessage.text);
+                        Console.WriteLine($"Socket Received Echo Message {receiveCount++}: " + echoMessage.text);
                         await SendEchoMessagePkg(stream, $"Socket Server Echo: {echoMessage.text}");
                     }
                 }
